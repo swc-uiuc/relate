@@ -52,19 +52,11 @@ export PATH=`pwd`/.env/local/bin:$PATH
 
 PIP="${PY_EXE} $(which pip)"
 
-if [[ "$PY_EXE" = python2* ]]; then
-  grep -Ev "django>|django=" requirements.txt > req.txt
-  $PIP install "django<2"
-  $PIP install mock
-else
-  cp requirements.txt req.txt
-fi
-
-$PIP install -r req.txt
+$PIP install -r requirements.txt
 
 cp local_settings_example.py local_settings.py
 
-if [[ "$RL_TRAVIS_TEST" = "test_postgres" ]]; then
+if [[ "$RL_CI_TEST" = "test_postgres" ]]; then
     $PIP install psycopg2-binary
     psql -c 'create database relate;' -U postgres
     echo "import psycopg2.extensions" >> local_settings_example.py
@@ -90,13 +82,11 @@ if [[ -n $(grep "msgid" output.txt) ]]; then
     exit 1;
 fi
 
-if [[ "$PY_EXE" = python3* ]]; then
-    ${PY_EXE} manage.py compilemessages
-fi
+${PY_EXE} manage.py compilemessages
 
 $PIP install codecov factory_boy
 
-if [[ "$RL_TRAVIS_TEST" = "test_expensive" ]]; then
+if [[ "$RL_CI_TEST" = "test_expensive" ]]; then
     coverage run manage.py test tests.test_tasks \
                                 tests.test_admin \
                                 tests.test_pages.test_code \
@@ -120,7 +110,7 @@ if [[ "$RL_TRAVIS_TEST" = "test_expensive" ]]; then
                                 tests.test_versioning.ParamikoSSHVendorTest \
                                 tests.test_receivers.UpdateCouresOrUserSignalTest
 
-elif [[ "$RL_TRAVIS_TEST" = "test_postgres" ]]; then
+elif [[ "$RL_CI_TEST" = "test_postgres" ]]; then
     coverage run manage.py test tests.test_postgres
 
 else
